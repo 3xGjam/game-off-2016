@@ -1,18 +1,84 @@
 ﻿using UnityEngine;
-using System.Collections;
+using System.Collections.Generic;
+using MovementEffects;
 
 public class Spawner : MonoBehaviour
 {
     GameManager gameManager;
 
     public GameObject[] hackySacks;             //objects the player wants to hit him
-    public Vector3 spawnValues;                 //Allows you to modify the hazard's position when it is instantiated in the unity editor.
+
+    [Tooltip("The limit in both max and min values from where an object can spawn. IE '10' will spawn -10 and 10.")]
+    public Vector2 spawnValues;                 //Allows you to modify the hazard's position when it is instantiated in the unity editor.
     public GameObject[] avoidables;             //DODGE!
+
+    public int avoidCount;
+    public float avoidStartWait = 10; //The amount of time (in seconds) before the first wave of SpawnAvoidables starts in the game. This starts the first wave only.
+    public float avoidSpawnWait = 4; //The amount of time (in seconds) before another avoidable fruit is instantiated. If there is 0.5 seconds between each spawn, then one avoidable fruit will spawn every 0.5 seconds until the wave stops.
+    public float avoidWaiveWait = 20; //The amount of time (in seconds) before another wave of avoidable fruit starts up again. If there is 4 seconds between each wave, that means there are four seconds after the last avoidable fruit spawned before another wave is started.
+
+
+    bool avoidableRunning;
+    bool gameOver;
+    bool pause;
+
+
 
     void Start()
     {
-        gameManager = GetComponent<GameManager>();
+        avoidableRunning = true;
+        gameOver = gameManager.gameOver;
+        pause = gameManager.pause;
 
+        gameManager = GetComponent<GameManager>();
+        Invoke("SpawnHackySack", 3);        //Wait three seconds then call this method
+
+        Timing.RunCoroutine(_SpawnAvoidables());        //Only ever starts once, when the game is over this ends.
+        Timing.RunCoroutine(_Countdown());
+    }
+
+    void SpawnHackySack()       //Initial Game Start method
+    {
+        Instantiate(hackySacks[0], new Vector2(0, 6.0f), Quaternion.identity);      //Always instantiate the hackysack above the starting player position.
+    }
+
+
+
+    IEnumerator<float> _Countdown()
+    {
+        yield return Timing.WaitForSeconds(1f);
+        gameManager.countdownBeginTimer.text = "2";
+        yield return Timing.WaitForSeconds(1f);
+        gameManager.countdownBeginTimer.text = "2";
+        yield return Timing.WaitForSeconds(1f);
+        gameManager.countdownBeginTimer.text = "GO!";
+        yield return Timing.WaitForSeconds(1f);
+        gameManager.countdownBeginTimer.text = "";
+    }
+
+    IEnumerator<float> _SpawnAvoidables()
+    {
+        //TODO: Logarithilly increase the amound of avoidables that are spawned.
+
+        avoidableRunning = true;   //In FixedUpdate, "turns off" the coroutine and stops the FixedUpdate from creating any more instances.
+
+        yield return Timing.WaitForSeconds(avoidStartWait);
+        while (gameOver != true && pause != true)
+        {
+            for (int i = 0; i <= avoidCount; i++)
+            {
+                GameObject food = avoidables[Random.Range(0, avoidables.Length)];
+                Vector2 spawnPosition = new Vector2(Random.Range(-spawnValues.x, spawnValues.x), spawnValues.y);         //inserts the values from the unity editor into the hazard's spawnPosition.
+                Quaternion spawnRotation = Quaternion.identity;     //Means our food will have no new rotation.
+                Instantiate(food, spawnPosition, spawnRotation);
+                if (pause == true || gameOver == true)
+                { break; }                              //Breaks the loop so fruit will stop spawning in (it finishes it's loop before stopping) DO NOT USE YIELD BREAK UNLESS YOU WANT THE LOOP TO STAY BROKEN UNTIL YOU START THE SCRIPT AGAIN!!!
+                yield return Timing.WaitForSeconds(avoidStartWait);
+            }
+            yield return Timing.WaitForSeconds(avoidWaiveWait);
+        }
+
+        avoidableRunning = false;  //In FixedUpdate, one SpawnFood Coroutine is allowed to pass.
     }
 
     /*
@@ -20,7 +86,7 @@ public class Spawner : MonoBehaviour
     {
         fruitRunning = true;   //In FixedUpdate, "turns off" the coroutine and stops the FixedUpdate from creating any more instances.
 
-        yield return new WaitForSeconds(startWait);
+        yield return new WaitForSeconds(avoidStartWait);
         while (gameOver != true && pause != true)
         {
             for (int i = 0; i <= foodCount; i++)
@@ -43,7 +109,7 @@ public class Spawner : MonoBehaviour
     {
         avoidableRunning = true;   //In FixedUpdate, "turns off" the coroutine and stops the FixedUpdate from creating any more instances.
 
-        yield return new WaitForSeconds(avoidStartWait);
+        yield return new WaitForSeconds(avoidavoidStartWait);
         while (gameOver != true && pause != true)
         {
             for (int i = 0; i <= avoidCount; i++)
