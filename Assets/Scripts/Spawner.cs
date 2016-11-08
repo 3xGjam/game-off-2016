@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using MovementEffects;
 
+[RequireComponent(typeof(GameManager))]
 public class Spawner : MonoBehaviour
 {
     GameManager gameManager;
 
     public GameObject[] hackySacks;             //objects the player wants to hit him
+    [SerializeField] Vector2 hackySackposition = new Vector2(0, 0);
 
     [Tooltip("The limit in both max and min values from where an object can spawn. IE '10' will spawn -10 and 10.")]
     public Vector2 spawnValues;                 //Allows you to modify the hazard's position when it is instantiated in the unity editor.
@@ -17,8 +19,20 @@ public class Spawner : MonoBehaviour
     public float avoidSpawnWait = 4; //The amount of time (in seconds) before another avoidable fruit is instantiated. If there is 0.5 seconds between each spawn, then one avoidable fruit will spawn every 0.5 seconds until the wave stops.
     public float avoidWaiveWait = 20; //The amount of time (in seconds) before another wave of avoidable fruit starts up again. If there is 4 seconds between each wave, that means there are four seconds after the last avoidable fruit spawned before another wave is started.
 
-
+    #pragma warning disable 0414
     bool avoidableRunning;
+    #pragma warning restore 0414
+
+    /*
+        #pragma warning disable 0168 // variable declared but not used.
+        #pragma warning disable 0219 // variable assigned but not used.
+        #pragma warning disable 0414 // private field assigned but not used.
+
+        #pragma warning restore 0168 // variable declared but not used.
+        #pragma warning restore 0219 // variable assigned but not used.
+        #pragma warning restore 0414 // private field assigned but not used.
+    */
+
     bool gameOver;
     bool pause;
 
@@ -26,43 +40,31 @@ public class Spawner : MonoBehaviour
 
     void Start()
     {
+        gameManager = GetComponent<GameManager>();
+
         avoidableRunning = true;
         gameOver = gameManager.gameOver;
         pause = gameManager.pause;
 
-        gameManager = GetComponent<GameManager>();
-        Invoke("SpawnHackySack", 3);        //Wait three seconds then call this method
+        Invoke("SpawnHackySack", 3);                    //Wait three seconds then call this method
 
         Timing.RunCoroutine(_SpawnAvoidables());        //Only ever starts once, when the game is over this ends.
-        Timing.RunCoroutine(_Countdown());
+
     }
 
     void SpawnHackySack()       //Initial Game Start method
     {
-        Instantiate(hackySacks[0], new Vector2(0, 6.0f), Quaternion.identity);      //Always instantiate the hackysack above the starting player position.
+        Instantiate(hackySacks[0], hackySackposition, Quaternion.identity);      //Always instantiate the hackysack above the starting player position.
     }
 
-
-
-    IEnumerator<float> _Countdown()
-    {
-        yield return Timing.WaitForSeconds(1f);
-        gameManager.countdownBeginTimer.text = "2";
-        yield return Timing.WaitForSeconds(1f);
-        gameManager.countdownBeginTimer.text = "2";
-        yield return Timing.WaitForSeconds(1f);
-        gameManager.countdownBeginTimer.text = "GO!";
-        yield return Timing.WaitForSeconds(1f);
-        gameManager.countdownBeginTimer.text = "";
-    }
 
     IEnumerator<float> _SpawnAvoidables()
     {
         //TODO: Logarithilly increase the amound of avoidables that are spawned.
-
-        avoidableRunning = true;   //In FixedUpdate, "turns off" the coroutine and stops the FixedUpdate from creating any more instances.
+        avoidableRunning = true;
 
         yield return Timing.WaitForSeconds(avoidStartWait);
+
         while (gameOver != true && pause != true)
         {
             for (int i = 0; i <= avoidCount; i++)

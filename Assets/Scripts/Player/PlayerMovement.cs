@@ -16,9 +16,12 @@ using System.Collections;
 [RequireComponent(typeof(Rigidbody2D))]
 public class PlayerMovement : MonoBehaviour
 {
-    [SerializeField] float speed;
+    [SerializeField] float speed = 0;
     Rigidbody2D rb2D;
+
+    #pragma warning disable 0414
     GameManager gameManager;
+    #pragma warning restore 0414
 
     bool moveRight;
     bool moveLeft;
