@@ -16,12 +16,8 @@ public class GameManager : MonoBehaviour
     public Text gameOverText;               //Text that appears when a player is hit with 3 avoidable objects
     public Image gameOverPanel;             //Panel that appears when a player is hit with 3 avoidable objects
     [HideInInspector] public string loseByAvoidables;         //String value (determined in the Editor) alerting the player that they lost because they were hit by 3 avoidable objects
-    [HideInInspector] public string TimeRanOut;               //String value (determined in the Editor) alerting the player that they lost because they ran out of time and did not get enough points
-
     public Text countdownBeginTimer;
-    //public Text timeText;
-    //public float timeCounter = 60;          //It's a float so I can subtract it from Time.deltaTime
-    //public int bonusTime;                   //used to add time to the clock and adds to your final score
+   
     
 
     //public Button replay;
